@@ -3,9 +3,9 @@
 _=$(
 #============================================================================#
 #                                                                            #
-# updot - A script to quickly copy trcked dotfiles to a git repository.      #
+# updot - A script to quickly copy tracked dotfiles to a git repository.     #
 #                                                                            #
-# Author: proxa                                                              #
+# Author: seed419                                                            #
 #                                                                            #
 #=============================================================================
 )
@@ -25,7 +25,6 @@ declare -a dotfiles=( '.aliases .bash_profile .bashrc .gitconfig .i3/config
 #===============
 function run {
   create_configuration_if_not_exists
-  #//FIXME needs to write to dotfiles array.
   write_tracked_files
 }
 
