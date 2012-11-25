@@ -92,14 +92,31 @@ write_to_conf_no_newline() {
 # Update dotfiles
 #=================
 function update_dotfiles {
-echo $dotfiles
-echo $repository_root
+arrayLength=${#dotfiles[@]}
 if [ -z $repository_root ];then
   echo "Please add your repository's root folder to your $updot_conf!"
   exit $no_repo
-elif [ -z $dotfiles ];then
+elif [ $arrayLength -eq 0 ];then
   echo "Not dotfiles array found in config!"
   exit $no_dotfiles
+else
+  echo "==> Updating dotfiles"
+  error=false
+  for dotfile in $dotfiles
+    do
+      if [ -f $HOME/$dotfile ];then
+        cp $HOME/$dotfile $repository_root
+        echo "  -> Updating $dotfile"
+      else
+        echo "  -> $dotfile not found!"
+        error=true
+      fi
+    done
+    if $error ;then
+      echo "==> Repository update encountered errors"
+    else
+      echo "==> Repository updated succesfully"
+    fi
 fi
 }
 
