@@ -1,0 +1,92 @@
+#!/bin/bash -- 
+
+_=$(
+#============================================================================#
+#                                                                            #
+# updot - A script to quickly copy trcked dotfiles to a git repository.      #
+#                                                                            #
+# Author: proxa                                                              #
+#                                                                            #
+#=============================================================================
+)
+
+#=========================
+# Configuration variables
+#=========================
+updot_home="$HOME/.config/updot"
+updot_conf="$HOME/.config/updot/updot.conf"
+git_repo=""
+declare -a dotfiles=( '.aliases .bash_profile .bashrc .gitconfig .i3/config 
+                              .prompt .rtorrent.rc .vimrc .weechat/weechat.conf 
+                              .xinitrc .Xresources .config/openbox/rc.xml' )
+
+#===============
+# Main function
+#===============
+function run {
+  create_configuration_if_not_exists
+  #//FIXME needs to write to dotfiles array.
+  write_tracked_files
+}
+
+#===========
+# First run
+#===========
+function create_configuration_if_not_exists {
+  if [ ! -f $updot_conf ]; then
+    mkdir -p $updot_home
+    touch $updot_conf
+    write_to_conf "# updot configuration file"
+    write_to_conf "  "
+    write_to_conf "# Git repository location"
+    write_to_conf "# Ex: git_repo=\"/home/$USER/code/linux/dotfiles\""
+    write_to_conf "git_repo=\"\""
+    write_to_conf "  "
+    write_to_conf "# Tracked dotfiles"
+    write_to_conf "# This is an array of dotfiles to copy to your repository"
+    write_to_conf "# Ex: dotfiles=( '.bashrc' '.xinitrc' '.bash_profile' )"
+    echo ""
+    echo "Created new updot.conf at $updot_conf"
+    echo ""
+  else
+    . $updot_conf
+  fi
+}
+
+
+#=================
+# File operations
+#=================
+write_to_conf() {
+  echo $1 >> $updot_conf
+}
+
+write_to_conf_no_newline() {
+  echo -n "$1 " >> $updot_conf  
+}
+
+#=============
+# Track files
+#=============
+function write_tracked_files {
+  echo "Checking for commonly tracked dotfiles..."
+  write_to_conf_no_newline "dotfiles=('"
+  for file in $dotfiles
+    do
+      if [ -f $HOME/$file ]; then
+        write_to_conf_no_newline $file
+        echo "$file found."
+      fi
+    done
+    write_to_conf "')"
+    echo ""
+    echo "You should check your updot.conf now to ensure that we're tracking the files you want!"
+    echo ""
+}
+   
+#=====
+# Run 
+#=====
+run
+
+# vim: set ft=sh :
