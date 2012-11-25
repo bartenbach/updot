@@ -3,55 +3,78 @@
 _=$(
 #============================================================================#
 #                                                                            #
-# updot - A script to quickly copy tracked dotfiles to a git repository.     #
+# updot - A script to quickly copy trcked dotfiles to a repository.          #
 #                                                                            #
 # Author: seed419                                                            #
 #                                                                            #
 #=============================================================================
 )
 
+#//TODO parse command line options (--help --version)
+
 #=========================
 # Configuration variables
 #=========================
 updot_home="$HOME/.config/updot"
 updot_conf="$HOME/.config/updot/updot.conf"
-git_repo=""
+repository_root=""
 declare -a dotfiles=( '.aliases .bash_profile .bashrc .gitconfig .i3/config 
                               .prompt .rtorrent.rc .vimrc .weechat/weechat.conf 
                               .xinitrc .Xresources .config/openbox/rc.xml' )
+
+#============
+# Exit codes
+#============
+no_repo=1
+no_dotfiles=2
 
 #===============
 # Main function
 #===============
 function run {
   create_configuration_if_not_exists
-  write_tracked_files
 }
 
-#===========
-# First run
-#===========
+#===============
+# Create config
+#===============
 function create_configuration_if_not_exists {
   if [ ! -f $updot_conf ]; then
     mkdir -p $updot_home
     touch $updot_conf
     write_to_conf "# updot configuration file"
     write_to_conf "  "
-    write_to_conf "# Git repository location"
-    write_to_conf "# Ex: git_repo=\"/home/$USER/code/linux/dotfiles\""
-    write_to_conf "git_repo=\"\""
+    write_to_conf "# Repository's root folder location"
+    write_to_conf "# Ex: repository_root=\"/home/$USER/code/linux/dotfiles\""
+    write_to_conf "repository_root=\"\""
     write_to_conf "  "
     write_to_conf "# Tracked dotfiles"
     write_to_conf "# This is an array of dotfiles to copy to your repository"
     write_to_conf "# Ex: dotfiles=( '.bashrc' '.xinitrc' '.bash_profile' )"
-    echo ""
-    echo "Created new updot.conf at $updot_conf"
-    echo ""
+    write_default_files
+    echo "==> Created new updot.conf at $updot_conf"
+    echo "-----------------------------------------------------------------------"
+    echo " -> Add your repository's root folder to the config before using updot"
+    echo " -> Ensure that the config is tracking the dotfiles you want to track"
+    echo "-----------------------------------------------------------------------"
   else
     . $updot_conf
+    update_dotfiles
   fi
 }
 
+function write_default_files {
+  echo "==> Checking for commonly tracked dotfiles"
+  write_to_conf_no_newline "dotfiles=('"
+  for file in $dotfiles
+    do
+      if [ -f $HOME/$file ]; then
+        write_to_conf_no_newline $file
+        echo "  -> $file found"
+      fi
+    done
+    write_to_conf "')"
+}
 
 #=================
 # File operations
@@ -64,25 +87,22 @@ write_to_conf_no_newline() {
   echo -n "$1 " >> $updot_conf  
 }
 
-#=============
-# Track files
-#=============
-function write_tracked_files {
-  echo "Checking for commonly tracked dotfiles..."
-  write_to_conf_no_newline "dotfiles=('"
-  for file in $dotfiles
-    do
-      if [ -f $HOME/$file ]; then
-        write_to_conf_no_newline $file
-        echo "$file found."
-      fi
-    done
-    write_to_conf "')"
-    echo ""
-    echo "You should check your updot.conf now to ensure that we're tracking the files you want!"
-    echo ""
+
+#=================
+# Update dotfiles
+#=================
+function update_dotfiles {
+echo $dotfiles
+echo $repository_root
+if [ -z $repository_root ];then
+  echo "Please add your repository's root folder to your $updot_conf!"
+  exit $no_repo
+elif [ -z $dotfiles ];then
+  echo "Not dotfiles array found in config!"
+  exit $no_dotfiles
+fi
 }
-   
+
 #=====
 # Run 
 #=====
