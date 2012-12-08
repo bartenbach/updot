@@ -1,49 +1,42 @@
 #!/bin/bash
-
+#
 # updot - A script to quickly copy trcked dotfiles to a repository.
-
+#
 # Copyright (C) <2012>  <Blake Bartenbach>
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
- 
+# 
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
- 
+# 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 #//TODO parse command line options (--help --version)
 
-#=========================
+#-------------------------
 # Configuration variables
-#=========================
+#-------------------------
 updot_home="$HOME/.config/updot"
 updot_conf="$HOME/.config/updot/updot.conf"
 repository_root=""
-declare -a dotfiles=( '.aliases .bash_profile .bashrc .gitconfig .i3/config 
-                              .prompt .rtorrent.rc .vimrc .weechat/weechat.conf 
-                              .xinitrc .Xresources .config/openbox/rc.xml' )
+declare -a dotfiles=( '.aliases .bash_profile .bashrc .gitconfig .i3/config .prompt .rtorrent.rc .vimrc 
+                       .weechat/weechat.conf .xinitrc .Xresources .config/openbox/rc.xml' )
 
-#============
+#------------
 # Exit codes
-#============
+#------------
 no_repo=1
 no_dotfiles=2
 
-#===============
-# Main function
-#===============
+#-----
+# Run
+#-----
 function run {
-  create_configuration_if_not_exists
-}
-
-#===============
-# Create config
-#===============
-function create_configuration_if_not_exists {
   if [ ! -f $updot_conf ]; then
     mkdir -p $updot_home
     touch $updot_conf
@@ -68,6 +61,11 @@ function create_configuration_if_not_exists {
   fi
 }
 
+
+
+#-----------------
+# File operations
+#-----------------
 function write_default_files {
   echo "==> Checking for commonly tracked dotfiles"
   write_to_conf_no_newline "dotfiles=('"
@@ -81,9 +79,6 @@ function write_default_files {
     write_to_conf "')"
 }
 
-#=================
-# File operations
-#=================
 write_to_conf() {
   echo $1 >> $updot_conf
 }
@@ -93,9 +88,9 @@ write_to_conf_no_newline() {
 }
 
 
-#=================
+#-----------------
 # Update dotfiles
-#=================
+#-----------------
 function update_dotfiles {
 arrayLength=${#dotfiles[@]}
 if [ -z $repository_root ];then
@@ -126,9 +121,9 @@ else
 fi
 }
 
-#=====
-# Run 
-#=====
+#------
+# Exec
+#------
 run
 
 # vim: set ft=sh :
