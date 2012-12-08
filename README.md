@@ -1,6 +1,6 @@
 #updot
+![Screenshot.png](http://i.imgur.com/TceUS.png)
 --------------
-
 ###description
 updot is a tiny shell script intended for updating all of your tracked dotfiles to a repository.
 
