@@ -26,6 +26,6 @@ This is my personal configuration file, which is reflected by my dotfiles reposi
     # Tracked dotfiles
     # This is an array of dotfiles to copy to your repository
     # Ex: dotfiles=( '.bashrc' '.xinitrc' '.bash_profile' )
-    dotfiles=(' .aliases .bashrc .gitconfig .i3/config .prompt .rtorrent.rc .vimrc .weechat/weechat.conf .xinitrc .Xresources 
-    .config/openbox/rc.xml .config/openbox/menu.xml .xmonad/xmonad.hs .config/updot/updot.conf .config/twmn/twmn.conf .dircolors 
-    .colors .git-prompt .profile .xpdfrc ')
+    dotfiles=(' .aliases .bashrc .gitconfig .i3/config .prompt .rtorrent.rc .vimrc .weechat/weechat.conf .xinitrc 
+    .Xresources .config/openbox/rc.xml .config/openbox/menu.xml .xmonad/xmonad.hs .config/updot/updot.conf 
+    .config/twmn/twmn.conf .dircolors .colors .git-prompt .profile .xpdfrc ')
