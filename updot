@@ -105,7 +105,8 @@ else
   for dotfile in $dotfiles
     do
       if [ -f $HOME/$dotfile ];then
-        cp $HOME/$dotfile $repository_root
+        mkdir -p $repository_root/$(dirname $dotfile)
+        cp $HOME/$dotfile $repository_root/$(dirname $dotfile)
         echo "  -> Updating $dotfile"
       else
         echo "  -> $dotfile not found!"
