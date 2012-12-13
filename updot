@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 #
 # updot - A script to quickly copy trcked dotfiles to a repository.
 #
@@ -24,7 +24,7 @@
 updot_home="$HOME/.config/updot"
 updot_conf="$HOME/.config/updot/updot.conf"
 repository_root=""
-declare -a dotfiles=( '.aliases .bash_profile .bashrc .gitconfig .i3/config .prompt .rtorrent.rc .vimrc 
+declare -a dotfiles=( '.bash_profile .bashrc .i3/config .prompt .rtorrent.rc .vimrc 
                        .weechat/weechat.conf .xinitrc .Xresources .config/openbox/rc.xml' )
 
 #------------------
@@ -46,37 +46,30 @@ parse_arguments() {
   while :
     do
       case $1 in
-        -h | --help | -\?)
-          echo "Usage"
-          exit 0
-          ;;
-        -v | --version)
-          echo $version
-          exit 0
-          ;;
-        --)
-          echo "-- end"
-          shift
-          break
-          ;;
-        -*)
-          echo "WARN: Unknown option (ignored): $1" >&2
-          shift
-          exit $unknown_argument
-          ;;
-        *)
-          echo "no more options"
-          break
-          ;;
+        -c | --color) color=1; shift ;;
+        -h | --help | -\?) echo_usage; exit 0 ;;
+        -v | --version) echo "updot $version"; exit 0 ;;
+        -u | --update) update_dotfiles; break ;;
+        --restore) echo "Functionality not yet merged";shift;break ;;
+        -*) echo "Unknown option: $1" >&2;shift;break;exit $unknown_argument ;;
+        *) echo "No option specified";exit $unkown_argument;break ;;
       esac
     done
 }
 
+function echo_usage {
+  echo "Usage: updot [arguments]"
+  echo "  -u, --update     Update system dotfiles to repository"
+  echo "      --restore    Restore repository dotfiles to system"
+  echo "  -c, --color      Use color"
+  echo "  -h, --help       Show this menu"
+  echo "  --version        Prints the version of this program"
+}
 
-#-----
-# run
-#-----
-function run {
+#--------------------
+# configuration file
+#--------------------
+function chk_config {
   if [[ ! -f "$updot_conf" ]]; then
     mkdir -p "$updot_home"
     touch "$updot_conf"
@@ -97,7 +90,6 @@ function run {
     echo "-----------------------------------------------------------------------"
   else
     . "$updot_conf"
-    update_dotfiles
   fi
 }
 
@@ -132,39 +124,39 @@ write_to_conf_no_newline() {
 # update dotfiles
 #-----------------
 function update_dotfiles {
-arrayLength=${#dotfiles[@]}
-if [[ -z "$repository_root" ]];then
-  echo "Please add your repository's root folder to your $updot_conf!"
-  exit $no_repo
-elif [ $arrayLength -eq 0 ];then
-  echo "Not dotfiles array found in config!"
-  exit $no_dotfiles
-else
-  echo "==> Updating dotfiles"
-  error=false
-  for dotfile in $dotfiles
-    do
-      if [[ -f "$HOME/$dotfile" ]];then
-        mkdir -p "$repository_root/$(dirname $dotfile)"
-        cp "$HOME/$dotfile" "$repository_root/$(dirname $dotfile)"
-        echo "  -> Updating $dotfile"
+  chk_config
+  arrayLength=${#dotfiles[@]}
+  if [[ -z "$repository_root" ]];then
+    echo "Please add your repository's root folder to your $updot_conf!"
+    exit $no_repo
+  elif [ $arrayLength -eq 0 ];then
+    echo "Not dotfiles array found in config!"
+    exit $no_dotfiles
+  else
+    echo "==> Updating dotfiles"
+    error=false
+    for dotfile in $dotfiles
+      do
+        if [[ -f "$HOME/$dotfile" ]];then
+          mkdir -p "$repository_root/$(dirname $dotfile)"
+          cp "$HOME/$dotfile" "$repository_root/$(dirname $dotfile)"
+          echo "  -> Updating $dotfile"
+        else
+          echo "  -> $dotfile not found!"
+          error=true
+        fi
+      done
+      if $error ;then
+        echo "==> Repository update encountered errors"
       else
-        echo "  -> $dotfile not found!"
-        error=true
+        echo "==> Repository updated"
       fi
-    done
-    if $error ;then
-      echo "==> Repository update encountered errors"
-    else
-      echo "==> Repository updated succesfully"
-    fi
-fi
+  fi
 }
 
 #------
 # exec
 #------
-#run
 parse_arguments $*
 
 # vim: set ft=sh :
