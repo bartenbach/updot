@@ -3,6 +3,7 @@
 # updot - A script to quickly copy trcked dotfiles to a repository.
 #
 # Copyright (C) <2012>  <Blake Bartenbach>
+# This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
@@ -16,21 +17,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-#//TODO parse command line options (--help --version)
-
 #-------------------------
 # configuration variables
 #-------------------------
 updot_home="$HOME/.config/updot"
 updot_conf="$HOME/.config/updot/updot.conf"
 repository_root=""
-declare -a dotfiles=( '.bash_profile .bashrc .i3/config .prompt .rtorrent.rc .vimrc 
+declare -a dotfiles=( '.bash_profile .bashrc .i3/config .prompt .rtorrent.rc .vimrc .profile
                        .weechat/weechat.conf .xinitrc .Xresources .config/openbox/rc.xml' )
+use_color="true"
 
 #------------------
 # script variables
 #------------------
-version="0.0.1-indev"
+version="0.0.2-indev"
 
 #------------
 # exit codes
@@ -46,13 +46,14 @@ parse_arguments() {
   while :
     do
       case $1 in
-        -c | --color) color=1; shift ;;
+        -c | --color) use_color='true'; shift ;;
+        -nc| --no-color) use_color='false'; shift ;;
         -h | --help | -\?) echo_usage; exit 0 ;;
         -v | --version) echo "updot $version"; exit 0 ;;
         -u | --update) update_dotfiles; break ;;
         --restore) echo "Functionality not yet merged";shift;break ;;
         -*) echo "Unknown option: $1" >&2;shift;break;exit $unknown_argument ;;
-        *) echo "No option specified";exit $unkown_argument;break ;;
+        *) echo_usage;exit $unkown_argument;break ;;
       esac
     done
 }
@@ -62,6 +63,7 @@ function echo_usage {
   echo "  -u, --update     Update system dotfiles to repository"
   echo "      --restore    Restore repository dotfiles to system"
   echo "  -c, --color      Use color"
+  echo "  -nc,--no-color   Do not use color"
   echo "  -h, --help       Show this menu"
   echo "  --version        Prints the version of this program"
 }
@@ -71,34 +73,40 @@ function echo_usage {
 #--------------------
 function chk_config {
   if [[ ! -f "$updot_conf" ]]; then
-    mkdir -p "$updot_home"
-    touch "$updot_conf"
-    write_to_conf "# updot configuration file"
-    write_to_conf "  "
-    write_to_conf "# Repository's root folder location"
-    write_to_conf "# Ex: repository_root=\"/home/$USER/code/linux/dotfiles\""
-    write_to_conf "repository_root=\"\""
-    write_to_conf "  "
-    write_to_conf "# Tracked dotfiles"
-    write_to_conf "# This is an array of dotfiles to copy to your repository"
-    write_to_conf "# Ex: dotfiles=( '.bashrc' '.xinitrc' '.bash_profile' )"
-    write_default_files
-    echo "==> Created new updot.conf at $updot_conf"
-    echo "-----------------------------------------------------------------------"
-    echo " -> Add your repository's root folder to the config before using updot"
-    echo " -> Ensure that the config is tracking the dotfiles you want to track"
-    echo "-----------------------------------------------------------------------"
   else
     . "$updot_conf"
   fi
 }
 
-
-
 #-----------------
 # file operations
 #-----------------
+function write_default_config {
+  mkdir -p "$updot_home"
+  touch "$updot_conf"
+  write_to_conf "# updot configuration file"
+  write_to_conf "  "
+  write_to_conf "# Repository's root folder location"
+  write_to_conf "# Ex: repository_root=\"/home/$USER/code/linux/dotfiles\""
+  write_to_conf "repository_root=\"\""
+  write_to_conf "  "
+  write_to_conf "# Tracked dotfiles"
+  write_to_conf "# This is an array of dotfiles to copy to your repository"
+  write_to_conf "# Ex: dotfiles=( '.bashrc' '.xinitrc' '.bash_profile' )"
+  write_default_files
+  write_to_conf "  "  
+  write_to_conf "# Color"
+  write_to_conf "# Ex: use_color=\"false\""
+  write_to_conf "use_color=\"true\""
+  echo "==> Created new updot.conf at $updot_conf"
+  echo "-----------------------------------------------------------------------"
+  echo " -> Add your repository's root folder to the config before using updot"
+  echo " -> Ensure that the config is tracking the dotfiles you want to track"
+  echo "-----------------------------------------------------------------------"
+}
+
 function write_default_files {
+  #//TODO colorize here
   echo "==> Checking for commonly tracked dotfiles"
   write_to_conf_no_newline "dotfiles=('"
   for file in $dotfiles
@@ -118,7 +126,6 @@ write_to_conf() {
 write_to_conf_no_newline() {
   echo -n "$1 " >> "$updot_conf"
 }
-
 
 #-----------------
 # update dotfiles
