@@ -1,6 +1,6 @@
 #!/bin/bash 
 #
-# updot - A script to quickly copy trcked dotfiles to a repository.
+# updot - A script to quickly copy tracked dotfiles to a repository.
 #
 # Copyright (C) <2012>  <Blake Bartenbach>
 # This program is free software: you can redistribute it and/or modify
@@ -18,86 +18,171 @@
 #
 
 #-------------------------
-# configuration variables
+# Script variables
 #-------------------------
-updot_home="$HOME/.config/updot"
-updot_conf="$HOME/.config/updot/updot.conf"
-repository_root=""
-declare -a dotfiles=( '.bash_profile .bashrc .i3/config .prompt .rtorrent.rc .vimrc .profile
-                       .weechat/weechat.conf .xinitrc .Xresources .config/openbox/rc.xml' )
-use_color="true"
+updot_home="$XDG_CONFIG_HOME/updot"
+updot_conf="$updot_home/updot.conf"
+declare -a dotfiles=(' .bash_profile .bashrc .i3/config .prompt .rtorrent.rc 
+                       .vimrc .profile .weechat/weechat.conf .xinitrc 
+                       .Xresources .config/openbox/rc.xml .xmonad/xmonad.hs 
+                       .inputrc ')
+version='0.0.3-indev'
+color=""
+bold=""
+uline=""
+high=0
+format=""
+use_color=""
+stahp=''
+no_repo=10
+no_dotfiles=20
+unknown_argument=30
+no_argument=31
+update_error=40
+no_conf=50
+not_yet=66
+magic=99
+#set -x
 
-#------------------
-# script variables
-#------------------
-version="0.0.2-indev"
+#-------
+# Color
+#-------
+define_color() {
+  reset=''
+  red='';green='';yellow='';blue='';magenta='';cyan='';white='';black=''
+}
 
-#------------
-# exit codes
-#------------
-no_repo=1
-no_dotfiles=2
-unknown_argument=3
+reset() {
+  echo -ne $reset  
+}
 
 #-----------------
 # Parse arguments
 #-----------------
+format() {
+  reset="\e[0m";
+  let local var=30;
+  if [[ -z $1 ]];then
+    while $((var<37));do
+      color_$var="\e[$ul;$b;$bg;$((30+$hi))m"
+      black="\e[$ul;$b;$bg;$((30+$hi))m"
+        red="\e[$ul;$b;$bg;$((31+$hi))m"
+      green="\e[$ul;$b;$bg;$((32+$hi))m"
+     yellow="\e[$ul;$b;$bg;$((33+$hi))m"
+       blue="\e[$ul;$b;$bg;$((34+$hi))m"
+    magenta="\e[$ul;$b;$bg;$((35+$hi))m"
+       cyan="\e[$ul;$b;$bg;$((36+$hi))m"
+    done
+  fi
+      white="\e[$ul;$b;$((37+$hi))m"
+}
+
 parse_arguments() {
+  while [[ -z $stahp ]]
+    do
+      case $1 in
+        -b  | --bold)      bl=1;   shift ;;
+        -nb | --no-bold)   bl=0;   shift ;;
+        -c  | --color)     cr=1;   shift ;;
+        -nc | --no-color)  cr=0;   shift ;;
+        -u  | --uline)     ul=4;   shift ;;
+        -nu | --no-uline)  ul=0;   shift ;;
+        -hi | --high)      hi=60;  shift ;;
+        -nh | --no-high)   hi=0;   shift ;;
+        -*) stahp="program...";    break ;;
+         *) stahp="wat r u doin";  break ;;
+       esac
+    done
+  format $color
   while :
     do
       case $1 in
-        -c | --color) use_color='true'; shift ;;
-        -nc| --no-color) use_color='false'; shift ;;
-        -h | --help | -\?) echo_usage; exit 0 ;;
-        -v | --version) echo "updot $version"; exit 0 ;;
-        -u | --update) update_dotfiles; break ;;
-        --restore) echo "Functionality not yet merged";shift;break ;;
-        -*) echo "Unknown option: $1" >&2;shift;break;exit $unknown_argument ;;
-        *) echo_usage;exit $unkown_argument;break ;;
+        -h | --help | -\?) echo_usage ;;
+        -v | --version) echo_version; reset; exit 0 ;;
+
+        --write-default-config) chk_for_existing_config
+             write_default_config;shift ;;
+
+        --restore) chk_config; echo "Not implemented yet"; exit $not_yet ;;
+        -u | --update) chk_config;update_dotfiles ;;
+        
+        -*) echo "Unknown option: $1">&2; echo_usage; exit $unknown_argument ;;
+        *) echo_usage;exit $no_argument ;;
       esac
     done
+  echo "I have escaped..."
 }
 
-function echo_usage {
-  echo "Usage: updot [arguments]"
-  echo "  -u, --update     Update system dotfiles to repository"
-  echo "      --restore    Restore repository dotfiles to system"
-  echo "  -c, --color      Use color"
-  echo "  -nc,--no-color   Do not use color"
-  echo "  -h, --help       Show this menu"
-  echo "  --version        Prints the version of this program"
+echo_usage() {
+  flag=$cyan
+  help=$magenta
+  header=$magenta #//TODO in config?
+  echo_version
+  echo -e "${header}Usage:$flag updot [format] operation"
+  echo ""
+  echo -e "${header} Operations:"
+  echo -e "$flag  -u, --update   $help  update tracked dotfiles in repository"
+  echo -e "$flag  -r, --restore  $help  restore tracked dotfiles to the system"
+  echo -e "$flag  -w, --write    $help  (re-)writes the default configuration file"
+  echo -e "$flag  -h, --help     $help  Show this menu"
+  echo -e "$flag      --version  $help  Prints the version of this program"
+  echo ""
+  echo -e "${header} Format:"
+  echo -e "$flag  -b, --bold     $help  Use bold text"
+  echo -e "$flag  -nb,--no-bold  $help  Do not use bold text"
+  echo -e "$flag  -c, --color    $help  Print to terminal in color"
+  echo -e "$flag  -nc,--no-color $help  Do not print colorized messages${reset}"
+  echo ""
+  exit 0
+}
+
+echo_version() {
+  echo -e "${white}${cyan}updot ${green}v${version}${reset}"
 }
 
 #--------------------
 # configuration file
 #--------------------
-function chk_config {
-  if [[ ! -f "$updot_conf" ]]; then
-  else
+chk_config() {
+  if [[ -r "$updot_conf" ]]; then
     . "$updot_conf"
+  else
+    echo  -e "${red}You need an updot.conf to do that."
+    echo -ne "${red}Use "
+    echo -n '`'
+    echo -ne "${yellow}updot --write-default-config${red}"
+    echo -n '` to create defaults.'
+    echo -e  $reset
+    exit $no_conf
   fi
 }
 
 #-----------------
 # file operations
 #-----------------
-function write_default_config {
-  mkdir -p "$updot_home"
-  touch "$updot_conf"
-  write_to_conf "# updot configuration file"
-  write_to_conf "  "
+chk_for_existing_cfg() {
+  if [[ -f $updot_home/$updot_conf ]];then
+    echo "existing config!" && exit 0;
+  fi
+}
+
+write_default_config() {
+  mkdir -p "$updot_home" && touch "$updot_conf"
+  write_to_conf "#" && write_to_conf "# updot.conf - updot configuration file"
+  write_to_conf "#" && write_to_conf ""
   write_to_conf "# Repository's root folder location"
-  write_to_conf "# Ex: repository_root=\"/home/$USER/code/linux/dotfiles\""
-  write_to_conf "repository_root=\"\""
-  write_to_conf "  "
+  write_to_conf "# Ex: repository_root=\"~/code/linux/dotfiles\""
+  write_to_conf "repository_root=\"\"" && write_to_conf ""
   write_to_conf "# Tracked dotfiles"
   write_to_conf "# This is an array of dotfiles to copy to your repository"
-  write_to_conf "# Ex: dotfiles=( '.bashrc' '.xinitrc' '.bash_profile' )"
-  write_default_files
-  write_to_conf "  "  
-  write_to_conf "# Color"
-  write_to_conf "# Ex: use_color=\"false\""
-  write_to_conf "use_color=\"true\""
+  write_to_conf "# Ex: dotfiles=(' .bash_profile .bashrc .inputrc .xinitrc ')"
+  write_default_files && write_to_conf "" 
+  write_to_conf "# Color. Ex: use_color=\"false\""
+  write_to_conf "use_color=\"true\"" && write_to_conf ""
+  write_to_conf "# vim: set ft=sh ts=2 sw=2 et:"
+}
+
+print_new_config_message() {
   echo "==> Created new updot.conf at $updot_conf"
   echo "-----------------------------------------------------------------------"
   echo " -> Add your repository's root folder to the config before using updot"
@@ -105,9 +190,8 @@ function write_default_config {
   echo "-----------------------------------------------------------------------"
 }
 
-function write_default_files {
-  #//TODO colorize here
-  echo "==> Checking for commonly tracked dotfiles"
+write_default_files() {
+  echo '==> Checking for commonly tracked dotfiles'
   write_to_conf_no_newline "dotfiles=('"
   for file in $dotfiles
     do
@@ -116,6 +200,7 @@ function write_default_files {
         echo "  -> $file found"
       fi
     done
+    unset file
     write_to_conf "')"
 }
 
@@ -130,40 +215,73 @@ write_to_conf_no_newline() {
 #-----------------
 # update dotfiles
 #-----------------
-function update_dotfiles {
-  chk_config
+update_dotfiles() {
   arrayLength=${#dotfiles[@]}
   if [[ -z "$repository_root" ]];then
+    print_color $red
     echo "Please add your repository's root folder to your $updot_conf!"
-    exit $no_repo
+    echo -ne $reset && exit $no_repo
   elif [ $arrayLength -eq 0 ];then
-    echo "Not dotfiles array found in config!"
-    exit $no_dotfiles
+    print_color $red
+    echo "Not dotfiles array found in config!" && exit $no_dotfiles
   else
-    echo "==> Updating dotfiles"
-    error=false
+    print_color $green
+    echo -ne "==>" && print_color $white
+    echo " Updating dotfiles" && error=false
     for dotfile in $dotfiles
       do
         if [[ -f "$HOME/$dotfile" ]];then
           mkdir -p "$repository_root/$(dirname $dotfile)"
           cp "$HOME/$dotfile" "$repository_root/$(dirname $dotfile)"
-          echo "  -> Updating $dotfile"
+          print_color $cyan
+          echo -ne "  ->" && print_color $white 
+          echo -e " Updating $dotfile"
         else
-          echo "  -> $dotfile not found!"
+          print_color $red
+          echo -n "  ->" && print_color $yellow
+          echo -n " $dotfile " && print_color $red
+          echo "not found!"
           error=true
         fi
       done
+      unset dotfile
       if $error ;then
-        echo "==> Repository update encountered errors"
+        print_color $red
+        echo -n "==> " && print_color $yellow
+        echo "Repository update encountered errors"
+        cleanup
+        exit $update_error
       else
-        echo "==> Repository updated"
+        print_color $green
+        echo -n "==> " && print_color $white
+        echo "Repository updated"
+        cleanup
+        exit 0
       fi
-  fi
+  fi  
+}
+
+#---------
+# Cleanup
+#---------
+cleanup() {
+  define_color
+  unset error
+  unset use_color
+  unset repository_root
+  unset dotfiles
+  unset arrayLength
+  unset unknown_argument
+  unset updot_conf
+  unset updot_home
+  reset
 }
 
 #------
 # exec
 #------
+define_color
 parse_arguments $*
+cleanup
 
 # vim: set ft=sh :
