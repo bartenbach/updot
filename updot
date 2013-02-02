@@ -26,14 +26,14 @@ declare -a dotfiles=(' .bash_profile .bashrc .i3/config .prompt .rtorrent.rc
                        .vimrc .profile .weechat/weechat.conf .xinitrc 
                        .Xresources .config/openbox/rc.xml .xmonad/xmonad.hs 
                        .inputrc ')
-version='0.0.3-indev'
-color=""
-bold=""
-uline=""
-high=0
-format=""
-use_color=""
-stahp=''
+version='0.0.4-indev'
+cr=''
+bl=''
+ul=''
+hi=''
+bg=''
+format=''
+use_color=''
 no_repo=10
 no_dotfiles=20
 unknown_argument=30
@@ -42,7 +42,6 @@ update_error=40
 no_conf=50
 not_yet=66
 magic=99
-#set -x
 
 #-------
 # Color
@@ -60,57 +59,49 @@ reset() {
 # Parse arguments
 #-----------------
 format() {
-  reset="\e[0m";
-  let local var=30;
-  if [[ -z $1 ]];then
-    while $((var<37));do
-      color_$var="\e[$ul;$b;$bg;$((30+$hi))m"
-      black="\e[$ul;$b;$bg;$((30+$hi))m"
-        red="\e[$ul;$b;$bg;$((31+$hi))m"
-      green="\e[$ul;$b;$bg;$((32+$hi))m"
-     yellow="\e[$ul;$b;$bg;$((33+$hi))m"
-       blue="\e[$ul;$b;$bg;$((34+$hi))m"
-    magenta="\e[$ul;$b;$bg;$((35+$hi))m"
-       cyan="\e[$ul;$b;$bg;$((36+$hi))m"
-    done
+  if [[ $1 -eq 1 ]];then
+      reset="\e[0m"
+      black="\e[$ul;$bl;$bg;((30+$hi))m"
+        red="\e[$ul;$bl;$bg;((31+$hi))m"
+      green="\e[$ul;$bl;$bg;((32+$hi))m"
+     yellow="\e[$ul;$bl;$bg;((33+$hi))m"
+       blue="\e[$ul;$bl;$bg;((34+$hi))m"
+    magenta="\e[$ul;$bl;$bg;((35+$hi))m"
+       cyan="\e[$ul;$bl;$bg;((36+$hi))m"
+      white="\e[$ul;$bl;$bg;((37+$hi))m"
   fi
-      white="\e[$ul;$b;$((37+$hi))m"
 }
 
 parse_arguments() {
+  local stahp
   while [[ -z $stahp ]]
     do
       case $1 in
-        -b  | --bold)      bl=1;   shift ;;
-        -nb | --no-bold)   bl=0;   shift ;;
-        -c  | --color)     cr=1;   shift ;;
-        -nc | --no-color)  cr=0;   shift ;;
-        -u  | --uline)     ul=4;   shift ;;
-        -nu | --no-uline)  ul=0;   shift ;;
-        -hi | --high)      hi=60;  shift ;;
-        -nh | --no-high)   hi=0;   shift ;;
-        -*) stahp="program...";    break ;;
-         *) stahp="wat r u doin";  break ;;
+        -b  | --bold     ) bl=1;                 shift ;;
+        -nb | --no-bold  ) bl=0;                 shift ;;
+        -c  | --color    ) cr=1;                 shift ;;
+        -nc | --no-color ) cr=0;                 shift ;;
+        -u  | --uline    ) ul=4;                 shift ;;
+        -nu | --no-uline ) ul=0;                 shift ;;
+        -hi | --high     ) hi=60;                shift ;;
+        -nh | --no-high  ) hi=0;                 shift ;;
+        -*               ) stahp="program";      break ;;
+         *               ) stahp="wat r u doin"; break ;;
        esac
     done
-  format $color
+  format $cr
   while :
     do
       case $1 in
         -h | --help | -\?) echo_usage ;;
         -v | --version) echo_version; reset; exit 0 ;;
-
-        --write-default-config) chk_for_existing_config
-             write_default_config;shift ;;
-
+        --write-default-config) chk_for_existing_config; write_default_config;shift ;;
         --restore) chk_config; echo "Not implemented yet"; exit $not_yet ;;
         -u | --update) chk_config;update_dotfiles ;;
-        
         -*) echo "Unknown option: $1">&2; echo_usage; exit $unknown_argument ;;
         *) echo_usage;exit $no_argument ;;
       esac
     done
-  echo "I have escaped..."
 }
 
 echo_usage() {
@@ -137,7 +128,7 @@ echo_usage() {
 }
 
 echo_version() {
-  echo -e "${white}${cyan}updot ${green}v${version}${reset}"
+  echo -e "${cyan}updot ${green}v${version}"
 }
 
 #--------------------
@@ -152,7 +143,6 @@ chk_config() {
     echo -n '`'
     echo -ne "${yellow}updot --write-default-config${red}"
     echo -n '` to create defaults.'
-    echo -e  $reset
     exit $no_conf
   fi
 }
@@ -265,7 +255,6 @@ update_dotfiles() {
 # Cleanup
 #---------
 cleanup() {
-  define_color
   unset error
   unset use_color
   unset repository_root
