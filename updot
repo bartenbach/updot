@@ -26,7 +26,7 @@ declare -a dotfiles=(' .bash_profile .bashrc .i3/config .prompt .rtorrent.rc
                        .vimrc .profile .weechat/weechat.conf .xinitrc 
                        .Xresources .config/openbox/rc.xml .xmonad/xmonad.hs 
                        .inputrc ')
-version='0.0.3-indev'
+version='0.0.4-indev'
 color=""
 bold=""
 uline=""
@@ -42,7 +42,6 @@ update_error=40
 no_conf=50
 not_yet=66
 magic=99
-#set -x
 
 #-------
 # Color
@@ -61,20 +60,16 @@ reset() {
 #-----------------
 format() {
   reset="\e[0m";
-  let local var=30;
   if [[ -z $1 ]];then
-    while $((var<37));do
-      color_$var="\e[$ul;$b;$bg;$((30+$hi))m"
-      black="\e[$ul;$b;$bg;$((30+$hi))m"
-        red="\e[$ul;$b;$bg;$((31+$hi))m"
-      green="\e[$ul;$b;$bg;$((32+$hi))m"
-     yellow="\e[$ul;$b;$bg;$((33+$hi))m"
-       blue="\e[$ul;$b;$bg;$((34+$hi))m"
-    magenta="\e[$ul;$b;$bg;$((35+$hi))m"
-       cyan="\e[$ul;$b;$bg;$((36+$hi))m"
-    done
+      black="\e[$ul;$bl;$bg;((30+$hi))m"
+        red="\e[$ul;$bl;$bg;((31+$hi))m"
+      green="\e[$ul;$bl;$bg;((32+$hi))m"
+     yellow="\e[$ul;$bl;$bg;((33+$hi))m"
+       blue="\e[$ul;$bl;$bg;((34+$hi))m"
+    magenta="\e[$ul;$bl;$bg;((35+$hi))m"
+       cyan="\e[$ul;$bl;$bg;((36+$hi))m"
+      white="\e[$ul;$bl;$bg;((37+$hi))m"
   fi
-      white="\e[$ul;$b;$((37+$hi))m"
 }
 
 parse_arguments() {
@@ -85,7 +80,7 @@ parse_arguments() {
         -nb | --no-bold)   bl=0;   shift ;;
         -c  | --color)     cr=1;   shift ;;
         -nc | --no-color)  cr=0;   shift ;;
-        -u  | --uline)     ul=4;   shift ;;
+        -ul | --uline)     ul=4;   shift ;;
         -nu | --no-uline)  ul=0;   shift ;;
         -hi | --high)      hi=60;  shift ;;
         -nh | --no-high)   hi=0;   shift ;;
@@ -104,7 +99,7 @@ parse_arguments() {
              write_default_config;shift ;;
 
         --restore) chk_config; echo "Not implemented yet"; exit $not_yet ;;
-        -u | --update) chk_config;update_dotfiles ;;
+        -u | --update) chk_config ; update_dotfiles ;;
         
         -*) echo "Unknown option: $1">&2; echo_usage; exit $unknown_argument ;;
         *) echo_usage;exit $no_argument ;;
@@ -218,43 +213,36 @@ write_to_conf_no_newline() {
 update_dotfiles() {
   arrayLength=${#dotfiles[@]}
   if [[ -z "$repository_root" ]];then
-    print_color $red
-    echo "Please add your repository's root folder to your $updot_conf!"
+    echo  -e "${red}Please add your repository's root folder to your $updot_conf!"
     echo -ne $reset && exit $no_repo
   elif [ $arrayLength -eq 0 ];then
-    print_color $red
-    echo "Not dotfiles array found in config!" && exit $no_dotfiles
+    echo "${red}Not dotfiles array found in config!" && exit $no_dotfiles
   else
-    print_color $green
-    echo -ne "==>" && print_color $white
-    echo " Updating dotfiles" && error=false
+    echo -ne "${green}==>"
+    echo -e "${white} Updating dotfiles" && error=false
     for dotfile in $dotfiles
       do
         if [[ -f "$HOME/$dotfile" ]];then
           mkdir -p "$repository_root/$(dirname $dotfile)"
           cp "$HOME/$dotfile" "$repository_root/$(dirname $dotfile)"
-          print_color $cyan
-          echo -ne "  ->" && print_color $white 
-          echo -e " Updating $dotfile"
+          echo -ne "${cyan}  ->"
+          echo -e "${white} Updating $dotfile"
         else
-          print_color $red
-          echo -n "  ->" && print_color $yellow
-          echo -n " $dotfile " && print_color $red
-          echo "not found!"
+          echo -ne "${red}  ->"
+          echo -ne "${yellow} $dotfile "
+          echo -e  "${red}not found!"
           error=true
         fi
       done
       unset dotfile
       if $error ;then
-        print_color $red
-        echo -n "==> " && print_color $yellow
-        echo "Repository update encountered errors"
+        echo -ne "${red}==> "
+        echo -e  "${yellow}Repository update encountered errors"
         cleanup
         exit $update_error
       else
-        print_color $green
-        echo -n "==> " && print_color $white
-        echo "Repository updated"
+        echo -ne "${green}==> "
+        echo -e  "${white}Repository updated"
         cleanup
         exit 0
       fi
