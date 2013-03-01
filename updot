@@ -139,17 +139,34 @@ echo_version() {
 # configuration file
 #--------------------
 chk_config() {
-  if [[ -r "$updot_conf" ]]; then
+  if [[ -z $XDG_CONFIG_HOME ]]; then
+    echo -ne "${yellow}It appears your"
+    echo -e '$XDG_CONFIG_HOME shell variable is empty..'
+    echo -ne "${yellow}Falling back to "
+    echo -e '$HOME'
+    if [[ -z $HOME ]]; then
+      echo -e "${red}"
+      echo -ne '$HOME is not set!  Giving up.'
+    elif [[ -r "$HOME/.config/updot/updot.conf" ]];then
+      . "$HOME/.config/updot/updot.conf"
+    else
+      no_config
+    fi
+  elif [[ -r "$updot_conf" ]]; then
     . "$updot_conf"
   else
-    echo  -e "${red}You need an updot.conf to do that."
-    echo -ne "${red}Use "
-    echo -n '`'
-    echo -ne "${yellow}updot --write-default-config${red}"
-    echo -n '` to create defaults.'
-    echo -e  $reset
-    exit $no_conf
+    no_config
   fi
+}
+
+no_config() {
+  echo  -e "${red}You need an updot.conf to do that."
+  echo -ne "${red}Use "
+  echo -n '`'
+  echo -ne "${yellow}updot --write-default-config${red}"
+  echo -n '` to create defaults.'
+  echo -e  $reset
+  exit $no_conf
 }
 
 #-----------------
