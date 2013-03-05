@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION='0.0.6-indev'
+VERSION='0.0.7-indev'
 declare -i -r NO_REPO=10 
 declare -i -r NO_HOME=11
 declare -i -r NO_CONF=12
@@ -64,14 +64,14 @@ parse_arguments() {
   while :
     do
       case $1 in
-        -h | --help    ) echo_usage ;             break ;;
-        -l | --ls      ) lsdot ;                  break ;;
-        -u | --update  ) update_dotfiles ;        break ;;
-        -v | --version ) echo_version ;           break ;;
-        -w | --write   ) write_default_config ;   break ;;
-        --restore      ) echo "Unimplemented" ;   break ;;
-        -*             ) unknown_arg $1 ;         break ;;
-        *              ) echo_usage ; exit $NO_ARGUMENT ;;
+        -h | --help       ) echo_usage ;             break ;;
+        -l | -ls | --list ) lsdot ;                  break ;;
+        -u | --update     ) update_dotfiles ;        break ;;
+        -v | --version    ) echo_version ;           break ;;
+        -w | --write      ) write_default_config ;   break ;;
+        --restore         ) echo "Unimplemented" ;   break ;;
+        -*                ) unknown_arg $1 ;         break ;;
+        *                 ) echo_usage ; exit $NO_ARGUMENT ;;
       esac
     done
 }
@@ -120,7 +120,7 @@ function echo_usage {
   echo ''
   echo -e "${header} Operations:$reset"
   echo -e "$flag  -h, --help     $desc  show this menu$reset"
-  echo -e "$flag  -l, --ls       $desc  list all dotfiles in a directory$reset"
+  echo -e "$flag  -l, -ls, --list$desc  list all dotfiles in a directory$reset"
   echo -e "$flag  -r, --restore  $desc  currently unimplemented$reset"
   echo -e "$flag  -u, --update   $desc  update tracked dotfiles in repository$reset"
   echo -e "$flag  -w, --write    $desc  writes the default configuration file$reset"
@@ -147,7 +147,9 @@ function echo_version {
 #---------------
 # #TODO should accept a directory as parameter
 lsdot() {
+  echo -ne ${white}${green} 
   echo .* | tr " " "\n" |tail -n +3
+  echo -ne $reset
 }
 
 #--------------------
@@ -187,7 +189,7 @@ function no_config_found {
   echo -ne "${white}The ${cyan}updot.conf ${white}defaults to ${cyan}/home/"
   echo -n '$USER/.config/updot/updot.conf'
   echo -e $reset
-  echo -e "${white}}Would you like to create one now? (y/n)$reset"
+  echo -e "${white}Would you like to create one now? (y/n)$reset"
   local var
   read var
   if [[ $var == y ]] || [[ $var == yes ]] || [[ $var == Y ]];then
@@ -202,10 +204,15 @@ function no_config_found {
 #-----------------
 function check_for_existing_config {
   if [[ -f $UPDOT_CONF ]];then
-    dialog --yesno "Existing updot.conf file found at ${UPDOT_CONF}  \
-      Do you want to overwrite your existing config?" 0 0
-    exit $EXISTING_CONF;
-    #TODO prompt for re-write
+    echo -e "${yellow}Existing configuration file found at $UPDOT_CONF"
+    echo -e "${white}Would you like to overwrite it? (y/n)$reset"
+    local var
+    read var
+    if [[ $var == y ]] || [[ $var == yes ]] || [[ $var == Y ]];then
+      return
+    else
+      exit 0
+    fi
   fi
 }
 
