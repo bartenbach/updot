@@ -16,12 +16,8 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-VERSION='0.0.5-indev'
 
-#-------------
-# Error Codes
-#-------------
+VERSION='0.0.6-indev'
 declare -i -r NO_REPO=10 
 declare -i -r NO_HOME=11
 declare -i -r NO_CONF=12
@@ -30,49 +26,36 @@ declare -i -r NO_ARGUMENT=14
 declare -i -r UNKNOWN_ARGUMENT=15
 declare -i -r EXISTING_CONF=16
 declare -i -r UPDATE_ERROR=17
-declare -i -r UNIMPLEMENTED=18
 
+#------
+# Main
+#------
 main() {
-  set -x
-  parse_arguments $@
-  exit 0
-}
-
-#-----------------
-# Parse arguments
-#-----------------
-# $@ - The formatting variables
-format() {
-  for arg in $@
-    do
-      if [[ $arg -gt 0 ]];then
-        reset="\e[0m"
-        black="\e[$ul;$bl;$bg;((30+$hi))m"
-        red="\e[$ul;$bl;$bg;((31+$hi))m"
-        green="\e[$ul;$bl;$bg;((32+$hi))m"
-        yellow="\e[$ul;$bl;$bg;((33+$hi))m"
-        blue="\e[$ul;$bl;$bg;((34+$hi))m"
-        magenta="\e[$ul;$bl;$bg;((35+$hi))m"
-        cyan="\e[$ul;$bl;$bg;((36+$hi))m"
-        white="\e[$ul;$bl;$bg;((37+$hi))m"
-        break
-      fi
-    done
+  source_config
+  parse_arguments "$@"
 }
 
 parse_arguments() {
+  local -i cr=0
+  local -i bl=0
+  local -i ul=0
+  local -i hi=0
+  [[ $color == true ]]          && local -i cr=1
+  [[ $bold == true ]]           && local -i bl=1
+  [[ $underline == true ]]      && local -i ul=4
+  [[ $high_intensity == true ]] && local -i hi=60
   local stahp
   while [[ -z $stahp ]]
     do
       case $1 in
-        -b  | --bold     ) declare -i bl=1;   shift ;;
-        -nb | --no-bold  ) declare -i bl=0;   shift ;;
-        -c  | --color    ) declare -i cr=1;   shift ;;
-        -nc | --no-color ) declare -i cr=0;   shift ;;
-        -ul | --uline    ) declare -i ul=4;   shift ;;
-        -nu | --no-uline ) declare -i ul=0;   shift ;;
-        -hi | --high     ) declare -i hi=60;  shift ;;
-        -nh | --no-high  ) declare -i hi=0;   shift ;;
+        -b  | --bold     ) local -i bl=1;     shift ;;
+        -nb | --no-bold  ) local -i bl=0;     shift ;;
+        -c  | --color    ) local -i cr=1;     shift ;;
+        -nc | --no-color ) local -i cr=0;     shift ;;
+        -ul | --uline    ) local -i ul=4;     shift ;;
+        -nu | --no-uline ) local -i ul=0;     shift ;;
+        -hi | --high     ) local -i hi=60;    shift ;;
+        -nh | --no-high  ) local -i hi=0;     shift ;;
         -*               ) stahp='program';   break ;;
          *               ) stahp='watrudoin'; break ;;
        esac
@@ -81,21 +64,46 @@ parse_arguments() {
   while :
     do
       case $1 in
-        -h | --help    ) echo_usage ;                      shift ;;
-        -l | --ls      ) lsdot ;                           shift ;;
-        -u | --update  ) source_config ; update_dotfiles ; shift ;;
-        -v | --version ) echo_version ;                    shift ;;
-        -w | --write   ) write_default_config ;            shift ;;
-        --restore      ) echo "Unimplemented"; exit $UNIMPLEMENTED ;;
-        -*             ) unknown_arg $1 ;                  shift ;;
-        *              ) echo_usage ; exit $NO_ARGUMENT          ;;
+        -h | --help    ) echo_usage ;             break ;;
+        -l | --ls      ) lsdot ;                  break ;;
+        -u | --update  ) update_dotfiles ;        break ;;
+        -v | --version ) echo_version ;           break ;;
+        -w | --write   ) write_default_config ;   break ;;
+        --restore      ) echo "Unimplemented" ;   break ;;
+        -*             ) unknown_arg $1 ;         break ;;
+        *              ) echo_usage ; exit $NO_ARGUMENT ;;
       esac
     done
 }
 
+# $1 - Color
+# $2 - Bold
+# $3 - Underline
+# $4 - High Intensity
+format() {
+  if [[ $cr -eq 1 ]];then
+    reset="\e[0m"
+    black="\e[$ul;$bl;$((30+$hi))m"
+    red="\e[$ul;$bl;$((31+$hi))m"
+    green="\e[$ul;$bl;$((32+$hi))m"
+    yellow="\e[$ul;$bl;$((33+$hi))m"
+    blue="\e[$ul;$bl;$((34+$hi))m"
+    magenta="\e[$ul;$bl;$((35+$hi))m"
+    cyan="\e[$ul;$bl;$((36+$hi))m"
+    white="\e[$ul;$bl;$((37+$hi))m"
+  elif [[ $bl -gt 0 ]] || [[ $hi -gt 0 ]] || [[ $ul -gt 0 ]];then
+    black='';red='';green='';yellow='';blue='';magenta='';cyan='';
+    reset="\e[0m"
+    white="\e[$ul;$bl;$((37+$hi))m"
+  else
+    black='';red='';green='';yellow='';blue='';magenta='';cyan='';
+    white='';reset=''
+  fi
+}
+
 # $1 - The option that was unrecognized
 unknown_arg() {
-  echo "${red}Unknown option: $1">&2
+  echo -e "${white}${red}Unknown option: $1$reset">&2
   echo_usage
   exit $UNKNOWN_ARGUMENT
 }
@@ -104,27 +112,34 @@ function echo_usage {
   flag=$cyan
   desc=$magenta
   header=$magenta
+  [[ -z $flag ]] && flag=$white
+  [[ -z $desc ]] && desc=$white
+  [[ -z $header ]] && header=$white
   echo_version
-  echo -e "${header}Usage:$flag updot [format] operation"
+  echo -e "${header}Usage:$flag updot [format] operation$reset"
   echo ''
-  echo -e "${header} Operations:"
-  echo -e "$flag  -h, --help     $desc  show this menu"
-  echo -e "$flag  -l, --ls       $desc  list all dotfiles in a directory"
-  echo -e "$flag  -r, --restore  $desc  currently unimplemented"
-  echo -e "$flag  -u, --update   $desc  update tracked dotfiles in repository"
-  echo -e "$flag  -w, --write    $desc  writes the default configuration file"
-  echo -e "$flag      --version  $desc  prints the version of this program"
+  echo -e "${header} Operations:$reset"
+  echo -e "$flag  -h, --help     $desc  show this menu$reset"
+  echo -e "$flag  -l, --ls       $desc  list all dotfiles in a directory$reset"
+  echo -e "$flag  -r, --restore  $desc  currently unimplemented$reset"
+  echo -e "$flag  -u, --update   $desc  update tracked dotfiles in repository$reset"
+  echo -e "$flag  -w, --write    $desc  writes the default configuration file$reset"
+  echo -e "$flag      --version  $desc  prints the version of this program$reset"
   echo ''
-  echo -e "${header} Format:"
-  echo -e "$flag  -b, --bold     $desc  use bold text"
-  echo -e "$flag  -nb,--no-bold  $desc  do not use bold text"
-  echo -e "$flag  -c, --color    $desc  print to terminal in color"
-  echo -e "$flag  -nc,--no-color $desc  do not print colorized messages${reset}"
+  echo -e "${header} Format:$reset"
+  echo -e "$flag  -b, --bold     $desc  use bold text$reset"
+  echo -e "$flag  -c, --color    $desc  use colors$reset"
+  echo -e "$flag  -hi,--high     $desc  use high intensity color$reset"
+  echo -e "$flag  -ul,--uline    $desc  use underline (why?)$reset"
+  echo -e "$flag  -nb,--no-bold  $desc  do not use bold text$reset"
+  echo -e "$flag  -nc,--no-color $desc  do not print colorized messages$reset"
+  echo -e "$flag  -nh,--no-high  $desc  do not use high intensity color$reset"
+  echo -e "$flag  -nu,--no-uline $desc  do not use underline$reset"
   echo ''
 }
 
 function echo_version {
-  echo -e "${cyan}updot ${green}v$VERSION"
+  echo -e "${white}${cyan}updot ${green}v$VERSION$reset"
 }
 
 #---------------
@@ -140,13 +155,9 @@ lsdot() {
 #--------------------
 function find_updot_home {
   if [[ -z $XDG_CONFIG_HOME ]]; then
-    echo -ne "${yellow}It appears your "
-    echo '$XDG_CONFIG_HOME shell variable is empty..'
-    echo -ne "${yellow}Falling back to "
-    echo '$HOME'
     if [[ -z $HOME ]]; then
-      echo -e "${red}"
-      echo -ne '$HOME is not set!  Giving up.'
+      echo -e "${white}${red}"
+      echo -ne '$XDG_CONFIG_HOME and $HOME are not set!  Giving up.'
       exit $NO_HOME
     else
       UPDOT_HOME="$HOME/.config/updot"
@@ -161,19 +172,29 @@ function source_config {
   find_updot_home
   if [[ -r $UPDOT_CONF ]];then
     source $UPDOT_CONF
-  else
-    exit_no_config_found
   fi
 }
 
-function exit_no_config_found {
-  echo  -e "${red}You need an updot.conf to do that."
-  echo -ne "${red}Use "
-  echo -n '`'
-  echo -ne "${yellow}updot -w${red}"
-  echo -n '` to create defaults.'
-  echo -e  $reset
-  exit $NO_CONF
+function ensure_config {
+  [[ -r $UPDOT_CONF ]] || no_config_found
+}
+
+function no_config_found {
+  echo -e "${white}${red}I couldn't find an updot.conf file$reset"
+  echo -e "${white}If this is the first time you've run ${cyan}\`updot -u\`${white},$reset"
+  echo -e "${white}answer yes to create one.$reset"
+  echo ''
+  echo -ne "${white}The ${cyan}updot.conf ${white}defaults to ${cyan}/home/"
+  echo -n '$USER/.config/updot/updot.conf'
+  echo -e $reset
+  echo -e "${white}}Would you like to create one now? (y/n)$reset"
+  local var
+  read var
+  if [[ $var == y ]] || [[ $var == yes ]] || [[ $var == Y ]];then
+    write_default_config
+  else
+    exit $NO_CONF
+  fi
 }
 
 #-----------------
@@ -181,7 +202,8 @@ function exit_no_config_found {
 #-----------------
 function check_for_existing_config {
   if [[ -f $UPDOT_CONF ]];then
-    echo "${yellow}You have an existing config! Cowardly standing down."
+    dialog --yesno "Existing updot.conf file found at ${UPDOT_CONF}  \
+      Do you want to overwrite your existing config?" 0 0
     exit $EXISTING_CONF;
     #TODO prompt for re-write
   fi
@@ -200,91 +222,128 @@ function write_default_config {
   write_to_conf '# This is an array of dotfiles in your $HOME to copy to your root_repository'
   write_to_conf "# Ex: dotfiles=(' .bash_profile .bashrc .inputrc .mutt/muttrc .xinitrc ')"
   write_default_files && write_to_conf '' 
-  write_to_conf '# Color. Ex: use_color="false"'
-  write_to_conf 'use_color="true"' && write_to_conf ''
+  write_to_conf '# Use color in output. true/false'
+  write_to_conf 'color="false"' && write_to_conf ''
+  write_to_conf '# Use bold print in output'
+  write_to_conf 'bold="false"' && write_to_conf ''
+  write_to_conf '# Use high intensity color in output'
+  write_to_conf 'high_intensity="false"' && write_to_conf ''
+  write_to_conf '# Use underlined text in output'
+  write_to_conf 'underline="false"' && write_to_conf ''
   write_to_conf '# vim: set ft=sh ts=2 sw=2 et:'
   print_new_config_message
 }
 
 function write_default_files {
-  echo -e "${green}==> Checking for commonly tracked dotfiles"
+  echo -e "${white}${green}==> ${white}Checking for commonly tracked dotfiles$reset"
   write_to_conf_no_newline "dotfiles=('"
   local -a -r defaults=('.bash_profile .bashrc .vimrc .xinitrc .Xresources 
       .xmonad/xmonad.hs .inputrc .xpdfrc .mutt/muttrc .Xdefaults ')
   local file
+  local -i matches=0
   for file in $defaults
     do
       if [[ -f "$HOME/$file" ]]; then
-        write_to_conf_no_newline $file
-        echo -e "${green}  -> $file found"
+        ((matches++))
+        if [[ $matches -eq 1 ]];then
+          write_to_conf_no_newline " $file"
+        else
+          write_to_conf ''
+          write_to_conf_no_newline "            $file"
+        fi
+        echo -e "${white}${cyan}  -> ${white}$file ${green}found$reset"
       fi
     done
-  write_to_conf "')"
+  write_to_conf " ')"
 }
 
 function print_new_config_message {
-  echo -e "==> Created new updot.conf at $UPDOT_CONF"
-  echo -e '-----------------------------------------------------------------------'
-  echo -e " -> Add your repository's root folder to the config before using updot"
-  echo -e ' -> Ensure that the config is tracking the dotfiles you want to track'
-  echo -e '-----------------------------------------------------------------------'
+  echo -e "${white}${green}==> ${white}Created new updot.conf at ${UPDOT_CONF}${reset}"
+  echo -e "${white}${cyan}-----------------------------------------------------------------------$reset"
+  echo -e "${white}${green}==> ${white}Add your repository's root folder to the config before using updot$reset"
+  echo -e "${white}${green}==> ${white}Ensure that the config is tracking the dotfiles you want to track$reset"
+  echo -e "${white}${cyan}-----------------------------------------------------------------------$reset"
+  exit 0
 }
 
 # $1 - Line to write to config
 write_to_conf() {
-  echo $1 >> $UPDOT_CONF
+  echo "$1" >> $UPDOT_CONF
 }
 
 # $1 - Line to write to config
 write_to_conf_no_newline() {
-  echo -n "$1 " >> $UPDOT_CONF
+  echo -n "$1" >> $UPDOT_CONF
 }
 
 #-----------------
 # update dotfiles
 #-----------------
 function update_dotfiles {
+  ensure_config
   check_for_repository_root
   check_for_dotfile_array
-  echo -e "${green}==>${white} Updating dotfiles"
-  declare -i error
+  echo -e "${white}${green}==>${white} Updating dotfiles$reset"
+  declare -i errors
+  declare -i updates
   for dotfile in $dotfiles
     do
-      if [[ -f "$dotfile" ]];then
-        mkdir -p "$repository_root/$(dirname $dotfile)"
-        cp "$dotfile" "$repository_root/$(dirname $dotfile)"
-        echo -e "${cyan}  ->${white} Updating $dotfile"
+      if [[ -f "$HOME/$dotfile" ]];then
+        diff_dotfiles $dotfile
       else
-        echo -e "${red}  ->${yellow} $dotfile ${red}not found!"
-        ((error++))
+        echo -e "${white}${red}  ->${yellow} $dotfile ${red}not found!$reset"
+        ((errors++))
       fi
     done
-  report_errors_to_stdout $error
+  report_updates_to_stdout $updates
+  report_errors_to_stdout $errors
+}
+
+# $1 - The dotfile to diff
+diff_dotfiles() {
+  if [[ ! -z $(diff -q $HOME/$dotfile $repository_root/$(dirname $dotfile)) ]];then
+    echo -e "${white}${cyan}  -> ${white}$dotfile ${green}updated$reset"
+    mkdir -p "$repository_root/$(dirname $dotfile)"
+    cp "$HOME/$dotfile" "$repository_root/$(dirname $dotfile)"
+    ((updates++))
+  else
+    echo -e "${white}${cyan}  ->${white} ${dotfile}${reset}"
+  fi
 }
 
 function check_for_dotfile_array {
-  arrayLength=${#dotfiles[@]}
-  if [ $arrayLength -eq 0 ];then
-    echo -e "${red}No dotfile array found in updot.conf!"
+  if [ ${#dotfiles[@]} -eq 0 ];then
+    echo -e "${white}${red}No ${yellow}dotfiles ${red}found in ${yellow}updot.conf!$reset"
     exit $NO_DOTFILES
   fi
 }
 
 function check_for_repository_root {
   if [[ -z "$repository_root" ]];then
-    echo -e "${red}No repository_root found in updot.conf!$reset"
+    echo -e "${white}${red}No ${yellow}repository_root ${red}found in ${yellow}updot.conf!$reset"
     exit $NO_REPO
   fi
 }
 
 # $1 - The error flag.  Non-zero value indicates at least one error.
 report_errors_to_stdout() {
-  if [[ $1 -gt 0 ]] ;then
-    echo -e "${red}==> ${yellow}Repository update encountered $1 errors"
+  if [[ $1 -gt 0 ]];then
+    echo -e "${white}${red}==> ${yellow}Repository update encountered ${red}$1 ${yellow}errors$reset"
     exit $UPDATE_ERROR
   else
-    echo -e "${green}==> ${white}Repository updated"
+    exit 0
   fi
 }
 
-main $@
+# $1 - The update flag.  Indicates the amount of changed files.
+report_updates_to_stdout() {
+  if [[ $1 -eq 0 ]];then
+    echo -e "${white}${green}==> ${white}Repository up to date$reset"
+  elif [[ $1 -eq 1 ]];then
+    echo -e "${white}${green}==> ${white}Updated $1 file$reset"
+  else
+    echo -e "${white}${green}==> ${white}Updated $1 files$reset"
+  fi
+}
+
+main "$@"
