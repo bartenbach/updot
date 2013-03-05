@@ -6,6 +6,7 @@
 updot is a bash shell script intended for updating all of your important (and not-so-important) dotfiles to a repository.
 
 On first ``updot -u``, updot will attempt to add some commonly tracked dotfiles to your ``$XDG_CONFIG_HOME/updot/updot.conf`` for you.
+
 --------------
 ![Installation.png](http://ompldr.org/vaG50Ng)
 --------------
@@ -23,12 +24,14 @@ Done!
 
 ###configuration file
 Here's what mine looks like.  The default will be almost identical except for different files.
+
 --------------
 ![Configuration.png](http://ompldr.org/vaG50Zq)
 --------------
 
 ###run it!
 ``updot``
+
 --------------
 ![Help.png](http://ompldr.org/vaG50aq)
 --------------
