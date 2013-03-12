@@ -32,7 +32,7 @@ the files you want to push to your repository.
     # This is an array of dotfiles in your $HOME to copy to your root_repository
     # Ex: dotfiles=(' .bash_profile .bashrc .inputrc .mutt/muttrc .xinitrc ')
     dotfiles=(' .bash_profile
-               .bashrc
+                .bashrc
                 .vimrc
                 .xinitrc
                 .Xresources
