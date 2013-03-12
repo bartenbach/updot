@@ -53,6 +53,3 @@ the files you want to push to your repository.
     underline="false"
     
     # vim: set ft=sh ts=2 sw=2 et:
-
-##run it!
-``updot``

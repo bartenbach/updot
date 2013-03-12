@@ -27,6 +27,8 @@ declare -i -r UNKNOWN_ARGUMENT=15
 declare -i -r EXISTING_CONF=16
 declare -i -r UPDATE_ERROR=17
 
+# TODO --restore functionality
+
 #------
 # Main
 #------
