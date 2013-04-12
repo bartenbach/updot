@@ -71,7 +71,7 @@ parse_arguments() {
         -u | --update     ) update_dotfiles ;        break ;;
         -v | --version    ) echo_version ;           break ;;
         -w | --write      ) write_default_config ;   break ;;
-        --restore         ) echo "Unimplemented" ;   break ;;
+        --restore         ) restore_dotfiles ;       break ;;
         -*                ) unknown_arg $1 ;         break ;;
         *                 ) echo_usage ; exit $NO_ARGUMENT ;;
       esac
@@ -283,6 +283,21 @@ write_to_conf() {
 # $1 - Line to write to config
 write_to_conf_no_newline() {
   echo -n "$1" >> $UPDOT_CONF
+}
+
+#---------
+# restore
+#---------
+function restore_dotfiles {
+  ensure_config
+  check_for_repository_root
+  echo -e "${white}${green}==>${white} Restoring dotfiles$reset"
+  declare -i errors
+  declare -i updates
+  for file in $(ls -A)
+    do
+      echo $file
+    done
 }
 
 #-----------------
