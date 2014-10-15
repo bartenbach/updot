@@ -1,6 +1,6 @@
 #updot - the dotfile repository update utility
 --------------
-![updot.png]
+![updot.png](https://github.com/proxa/updot/blob/master/updot.png)
 
 ##description
 updot is a bash shell script intended for updating all of your important (and not-so-important) dotfiles to a repository.
