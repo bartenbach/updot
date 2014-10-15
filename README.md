@@ -1,6 +1,6 @@
 #updot - the dotfile repository update utility
 --------------
-![Screenshot.png](http://ompldr.org/vaG50bg)
+![updot.png]
 
 ##description
 updot is a bash shell script intended for updating all of your important (and not-so-important) dotfiles to a repository.
@@ -13,8 +13,6 @@ Save updot.  ``chmod +x updot && mv updot /usr/local/bin``
 (Assuming ``/usr/local/bin`` is in your ``$PATH``. You can do ``echo $PATH`` to check) 
   
 Done!
-
-![Installation.png](http://ompldr.org/vaG50bw)
 
 You will need to add your ``repository_root`` to the updot.conf, and you should ensure that the ``dotfiles`` array matches
 the files you want to push to your repository.
