@@ -1,5 +1,5 @@
 #updot
-###a colorful little dotfile repository update utility
+####a colorful little dotfile repository update utility
 --------------
 ![updot.png](https://github.com/proxa/updot/blob/master/updot.png)
 
