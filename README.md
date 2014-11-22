@@ -13,11 +13,11 @@ they are stored in updot's dotfile array and diffed/updated automagically!
 1. Save updot.  Then, ``chmod +x updot && mv updot /usr/local/bin``
 (Assuming ``/usr/local/bin`` is in your ``$PATH``. You can do ``echo $PATH`` if you're not sure) 
   
-2. Run ``updot -c -u`` to write a new configuration file (-c specifies to use color output to your terminal)
+2. Run ``updot -c -u`` to write your new configuration file (-c specifies to use color output to your terminal)
 
-3. Add your ``repository_root`` to the updot.conf, and customize the ``dotfiles`` array to your liking.
+3. Add your ``repository_root`` to the updot.conf, and customize your ``dotfiles`` array.
 
-4. Profit!  Run ``updot -u`` and never worry about updating your dotfile repo again.
+4. **Profit!**  Run ``updot -u`` and never worry about updating your dotfile repo again.
 
 ##configuration file
     #
