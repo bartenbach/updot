@@ -1,21 +1,22 @@
-#updot - the dotfile repository update utility
+#updot - a colorful little dotfile repository update utility
 --------------
 ![updot.png](https://github.com/proxa/updot/blob/master/updot.png)
 
 ##description
-updot is a bash shell script intended for updating all of your important (and not-so-important) dotfiles to a repository.
+updot is a script for tracking and updating all of your dotfiles to your repository.
 
-On first ``updot -u``, updot will attempt to add some commonly tracked dotfiles to your ``$XDG_CONFIG_HOME/updot/updot.conf`` for you.
+Instead copying dotfiles one by one and forgetting what files have changed, 
+they are stored in updot's dotfile array and diffed/updated automagically!
 
 ##installation
-Save updot.  ``chmod +x updot && mv updot /usr/local/bin``
-
-(Assuming ``/usr/local/bin`` is in your ``$PATH``. You can do ``echo $PATH`` to check) 
+1. Save updot.  Then, ``chmod +x updot && mv updot /usr/local/bin``
+(Assuming ``/usr/local/bin`` is in your ``$PATH``. You can do ``echo $PATH`` if you're not sure) 
   
-Done!
+2. Run ``updot -c -u`` to write a new configuration file (-c specifies to use color output to your terminal)
 
-You will need to add your ``repository_root`` to the updot.conf, and you should ensure that the ``dotfiles`` array matches
-the files you want to push to your repository.
+3. Add your ``repository_root`` to the updot.conf, and customize the ``dotfiles`` array to your liking.
+
+4. Profit!  Run ``updot -u`` and never worry about updating your dotfile repo again.
 
 ##configuration file
     #

@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION='0.0.7-indev'
+VERSION='0.0.8-alpha'
 declare -i -r NO_REPO=10 
 declare -i -r NO_HOME=11
 declare -i -r NO_CONF=12
@@ -312,8 +312,14 @@ function update_dotfiles {
   declare -i updates
   for dotfile in $dotfiles
     do
-      if [[ -f "$HOME/$dotfile" ]];then
-        diff_dotfiles $dotfile
+      if [[ -f "$HOME/$dotfile" ]];then  # if dotfile exists locally
+        if [[ -f "$repository_root/$dotfile" ]];then  # if dotfile is in repository_root
+          diff_dotfiles $dotfile
+        else 
+          # adding a new dotfile to the repository
+          echo -e "${white}${cyan}  ->${white} $dotfile ${yellow}added$reset"
+          copy_dotfile $dotfile
+        fi
       else
         echo -e "${white}${red}  ->${yellow} $dotfile ${red}not found!$reset"
         ((errors++))
@@ -326,13 +332,18 @@ function update_dotfiles {
 # $1 - The dotfile to diff
 diff_dotfiles() {
   if [[ ! -z $(diff -q $HOME/$dotfile $repository_root/$(dirname $dotfile)) ]];then
+    copy_dotfile $1
     echo -e "${white}${cyan}  -> ${white}$dotfile ${green}updated$reset"
-    mkdir -p "$repository_root/$(dirname $dotfile)"
-    cp "$HOME/$dotfile" "$repository_root/$(dirname $dotfile)"
-    ((updates++))
-  else
+     else
     echo -e "${white}${cyan}  ->${white} ${dotfile}${reset}"
   fi
+}
+
+# $1 - The dotfile to copy to $repository_root
+copy_dotfile() {
+  mkdir -p "$repository_root/$(dirname $1)"
+  cp "$HOME/$1" "$repository_root/$(dirname $1)"
+  ((updates++))
 }
 
 function check_for_dotfile_array {
