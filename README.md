@@ -7,7 +7,7 @@
 updot is a script for tracking and updating all of your dotfiles to your repository.
 
 Instead copying dotfiles one by one and forgetting what files have changed, 
-they are stored in updot's *dotfile array* and diffed/updated automagically!
+they are stored in updot's dotfiles array and diffed/updated automagically!
 
 ##installation
 1. Save updot.  Then, ``chmod +x updot && mv updot /usr/local/bin``
