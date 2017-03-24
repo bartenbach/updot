@@ -1,15 +1,15 @@
-#updot
-####a colorful little dotfile repository update utility
+# updot
+#### a colorful little dotfile repository update utility
 --------------
 ![updot.png](https://github.com/proxa/updot/blob/master/updot.png)
 
-##description
+## description
 updot is a script for tracking and updating all of your dotfiles to your repository.
 
 Instead copying dotfiles one by one and forgetting what files have changed, 
 they are stored in updot's dotfiles array and diffed/updated automagically!
 
-##installation
+## installation
 1. Save updot.  Then, ``chmod +x updot && mv updot /usr/local/bin``
 (Assuming ``/usr/local/bin`` is in your ``$PATH``. You can do ``echo $PATH`` if you're not sure..)
   
@@ -19,7 +19,7 @@ they are stored in updot's dotfiles array and diffed/updated automagically!
 
 4. **Profit!**  Run ``updot -u`` and never worry about updating your dotfile repo again.
 
-##configuration file
+## configuration file
     #
     # updot.conf - updot configuration file
     #
