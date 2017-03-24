@@ -1,5 +1,7 @@
 # updot
+
 #### a colorful little dotfile repository update utility
+
 --------------
 ![updot.png](https://github.com/proxa/updot/blob/master/updot.png)
 
@@ -51,5 +53,3 @@ they are stored in updot's dotfiles array and diffed/updated automagically!
     
     # Use underlined text in output
     underline="false"
-    
-    # vim: set ft=sh ts=2 sw=2 et:
